@@ -178,6 +178,7 @@ class Statusline:
                                     json.dumps(self._blocks, cls=BlockEncoder))
                 json.dump(self._blocks, self.writer,
                           indent=self.indent, cls=BlockEncoder)
+                self.writer.write(",")
                 self.writer.flush()
             finally:
                 # make sure every block is released
@@ -215,6 +216,6 @@ class Statusline:
             self._log.warn("i3bar stream already stopped!")
             return
         self._log.info("Stopping i3bar stream...")
-        self.writer.write("]")
+        self.writer.write("[]]")
         self.writer.flush()
         self._is_open = False
