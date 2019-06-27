@@ -70,6 +70,11 @@ if __name__ == "__main__":
                         b, block.interval,
                         block.options())
 
+    # TODO: Wait until every plugin has set atleast full_text set
+    # Just a quick fix for full_text unset
+    # on first line sent
+    time.sleep(1)
+
     statusline.start()
     while statusline.is_open:
         statusline.sendline()
