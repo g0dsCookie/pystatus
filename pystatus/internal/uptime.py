@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from time import time
 from psutil import boot_time
 from pystatus.plugin import IPlugin, IInstance
@@ -14,7 +14,7 @@ class UptimeInstance(IInstance):
         options = {"text": "U: %s"}
         super().__init__(*args, options=options, **kwargs)
 
-    def _get_uptime(self):
+    def _get_uptime(self) -> timedelta:
         current = datetime.fromtimestamp(int(time()))
         return current - datetime.fromtimestamp(boot_time())
 

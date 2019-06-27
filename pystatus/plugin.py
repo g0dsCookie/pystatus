@@ -5,64 +5,33 @@ import importlib.util
 import logging
 import re
 import os
+from typing import Union, Type, Any, Callable
 import pystatus.config
+import pystatus.i3bar
 
 
 class Author:
-    def __init__(self, name, email=None):
+    def __init__(self, name: str, email: str = None):
         self._name = name
         self._email = email
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     @property
-    def email(self):
+    def email(self) -> str:
         return self._email
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self.email:
             return "%s <%s>" % (self.name, self.email)
         return self.name
 
 
-class IPlugin(abc.ABC):
-    def __init__(self, name, version, author, inst):
-        self._name = name
-        self._version = version
-        self._author = Author(author) if isinstance(author, str) else author
-        self._inst = inst
-        self._log = logging.getLogger(name)
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def version(self):
-        return self._version
-
-    @property
-    def author(self):
-        return self._author
-
-    @property
-    def log(self):
-        return self._log
-
-    def register_option(self, name, fn):
-        pystatus.config.Block.register_option(self.name, name, fn)
-
-    def instance(self, name, block, interval, options):
-        return self._inst(plugin=self.name, name=name,
-                          interval=interval, block=block,
-                          **options)
-
-
 class IInstance(threading.Thread, metaclass=abc.ABCMeta):
     def __init__(self, *args, **kwargs):
-        self._block = kwargs.get("block")
+        self._block: pystatus.i3bar.Block = kwargs.get("block")
         if not self._block:
             raise ValueError("block for instance must be defined")
         del kwargs["block"]
@@ -74,18 +43,18 @@ class IInstance(threading.Thread, metaclass=abc.ABCMeta):
         else:
             self._interval = 5
 
-        plugin = kwargs.get("plugin")
+        plugin: str = kwargs.get("plugin")
         if not plugin:
             raise ValueError("plugin for instance must be defined")
         del kwargs["plugin"]
-        self._name = kwargs.get("name")
+        self._name: str = kwargs.get("name")
         if not self._name:
             raise ValueError("name for instance must be defined")
         kwargs["name"] = "%s_%s" % (plugin, self._name)
         self._log = logging.getLogger(kwargs["name"])
 
         # parse plugin options
-        options = kwargs.get("options")
+        options: dict = kwargs.get("options")
         if options:
             for k, v in options.items():
                 if k in kwargs:
@@ -98,42 +67,77 @@ class IInstance(threading.Thread, metaclass=abc.ABCMeta):
         return super().__init__(*args, **kwargs)
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     @property
-    def log(self):
+    def log(self) -> logging.Logger:
         return self._log
 
     @property
-    def block(self):
+    def block(self) -> pystatus.i3bar.Block:
         return self._block
 
     @property
-    def stopped(self):
+    def stopped(self) -> bool:
         return self._stopped
 
     @property
-    def interval(self):
+    def interval(self) -> int:
         return self._interval
 
     @abc.abstractmethod
-    def update(self):
+    def update(self) -> None:
         raise NotImplementedError
 
-    def start(self):
+    def start(self) -> None:
         self._stopped = False
         super().start()
 
-    def stop(self, join=True):
+    def stop(self, join: bool = True) -> None:
         self._stopped = True
         if join:
             self.join()
 
-    def run(self):
+    def run(self) -> None:
         while not self.stopped:
             self.update()
             time.sleep(self.interval)
+
+
+class IPlugin(abc.ABC):
+    def __init__(self, name: str, version: str,
+                 author: Union[str, Author], inst: Type[IInstance]):
+        self._name = name
+        self._version = version
+        self._author = Author(author) if isinstance(author, str) else author
+        self._inst = inst
+        self._log = logging.getLogger(name)
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def version(self) -> str:
+        return self._version
+
+    @property
+    def author(self) -> Author:
+        return self._author
+
+    @property
+    def log(self) -> logging.Logger:
+        return self._log
+
+    def register_option(self, name: str, fn: Union[type, Callable]) -> None:
+        pystatus.config.Block.register_option(self.name, name, fn)
+
+    def instance(self, name: str, block: pystatus.i3bar.Block,
+                 interval: int, options: dict):
+        return self._inst(plugin=self.name, name=name,
+                          interval=interval, block=block,
+                          **options)
 
 
 class PluginParent:
@@ -142,7 +146,7 @@ class PluginParent:
         self._instances = {}
         self._log = logging.getLogger("PluginParent")
 
-    def _load_internals(self):
+    def _load_internals(self) -> None:
         from pystatus.internal import PLUGINS
         self._log.debug("Loading internal plugins...")
         for plugin in PLUGINS:
@@ -152,7 +156,7 @@ class PluginParent:
                             p.name, p.version, p.author)
         del PLUGINS
 
-    def _load_externals(self, dirpath):
+    def _load_externals(self, dirpath: str) -> None:
         search = re.compile(r"\.py$", re.IGNORECASE)
         files = filter(lambda f: (not f.startswith("__")
                                   and search.search(f)),
@@ -168,13 +172,15 @@ class PluginParent:
             self._log.debug("Loaded %s [%s - %s]",
                             plugin.name, plugin.version, plugin.author)
 
-    def load_plugins(self, dirpath):
+    def load_plugins(self, dirpath: str) -> None:
         self._load_internals()
         if dirpath:
             self._log.info("Loading plugins from %s", dirpath)
             self._load_externals(dirpath)
 
-    def instance(self, plugin, name, block, interval, options):
+    def instance(self, plugin: str, name: str,
+                 block: pystatus.i3bar.Block,
+                 interval: int, options: dict) -> None:
         plugin = plugin.lower()
         if plugin not in self._plugins:
             self._log.debug("Plugin %s not found", plugin)
@@ -200,7 +206,7 @@ class PluginParent:
 
         self._instances["%s_%s" % (plugin, name.lower())] = inst
 
-    def stop(self):
+    def stop(self) -> None:
         for name, instance in self._instances.items():
             instance.stop(join=False)
         for name, instance in self._instances.items():

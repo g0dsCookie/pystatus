@@ -1,4 +1,6 @@
 from enum import Enum
+import xml.etree.ElementTree as ET
+from typing import List, Tuple
 from psutil import virtual_memory, swap_memory
 from humanfriendly import parse_size, format_size
 from pystatus.plugin import IPlugin, IInstance
@@ -22,10 +24,10 @@ class Memory(IPlugin):
         self.register_option("source", self._xml_source)
         self.register_option("type", self._xml_type)
 
-    def _xml_parse(self, xml):
+    def _xml_parse(self, xml: ET.Element) -> int:
         return parse_size(xml.text, binary=True)
 
-    def _xml_source(self, xml):
+    def _xml_source(self, xml: ET.Element) -> MemorySource:
         try:
             i = int(xml.text)
         except ValueError:
@@ -40,7 +42,7 @@ class Memory(IPlugin):
             self.log.critical("Invalid memory source %d", i)
             exit(2)
 
-    def _xml_type(self, xml):
+    def _xml_type(self, xml: ET.Element) -> MemoryType:
         try:
             i = int(xml.text)
         except ValueError:
@@ -87,15 +89,15 @@ class MemoryInstance(IInstance):
                 "err": "#ff0000",
             }
 
-    def _get_swap(self):
+    def _get_swap(self) -> List[int]:
         mem = swap_memory()
         return [mem.total, mem.free, mem.used]
 
-    def _get_ram(self):
+    def _get_ram(self) -> List[int]:
         mem = virtual_memory()
         return [mem.total, mem.available, mem.used]
 
-    def _get_mem(self):
+    def _get_mem(self) -> List[int]:
         if self._type == MemoryType.RAM:
             return self._get_ram()
         elif self._type == MemoryType.SWAP:
@@ -103,21 +105,21 @@ class MemoryInstance(IInstance):
         else:
             raise ValueError("Unknown memory type %s" % self._type)
 
-    def _color_available(self, avail):
+    def _color_available(self, avail: int) -> str:
         if avail <= self._threshold_err:
             return self._color["err"]
         if avail <= self._threshold_warn:
             return self._color["warn"]
         return self._color["ok"]
 
-    def _color_used(self, used):
+    def _color_used(self, used: int) -> str:
         if used >= self._threshold_err:
             return self._color["err"]
         if used >= self._threshold_warn:
             return self._color["warn"]
         return self._color["ok"]
 
-    def _check_mem(self):
+    def _check_mem(self) -> Tuple[int, str]:
         mem = self._get_mem()
         if self._source == MemorySource.AVAILABLE:
             return (mem[1], self._color_available(mem[1]))

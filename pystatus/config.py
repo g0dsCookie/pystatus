@@ -1,27 +1,21 @@
 import logging
 import xml.etree.ElementTree as ET
+from typing import Union, Callable, List
 
 
-def _xml_find_default(xml, name, default=None):
-    x = xml.find(name)
-    if not x:
-        return default
-    return x.text
-
-
-def _xml_int(xml):
+def _xml_int(xml: ET.Element) -> int:
     return int(xml.text)
 
 
-def _xml_text(xml):
+def _xml_text(xml: ET.Element) -> str:
     return xml.text
 
 
-def _xml_bool(xml):
+def _xml_bool(xml: ET.Element) -> bool:
     return xml.text.lower() in ["1", "true"]
 
 
-def _xml_color(xml):
+def _xml_color(xml: ET.Element) -> Union[str, dict]:
     single = _xml_single_color(xml)
     if single:
         return single
@@ -32,7 +26,7 @@ def _xml_color(xml):
     return colors
 
 
-def _xml_single_color(xml):
+def _xml_single_color(xml: ET.Element) -> str:
     if xml.text.startswith("#"):
         return xml.text
     r, g, b = xml.get("r"), xml.get("g"), xml.get("b")
@@ -62,7 +56,7 @@ class Block:
 
     log = logging.getLogger("Block")
 
-    def __init__(self, xml):
+    def __init__(self, xml: ET.Element):
         if xml.tag != "block":
             self.log.critical("Invalid section name for Block: %s", xml.tag)
             exit(2)
@@ -78,14 +72,14 @@ class Block:
             p = self._get_option_fn(child.tag)
             setattr(self, child.tag, p(child))
 
-    def _get_option_fn(self, name):
+    def _get_option_fn(self, name: str) -> Callable:
         if (self.plugin in self._PLUGIN_OPTIONS
                 and name in self._PLUGIN_OPTIONS[self.plugin]):
             return self._PLUGIN_OPTIONS[self.plugin][name]
         return self._BLOCK_OPTIONS.get(name, _xml_text)
 
     @staticmethod
-    def _normalize_option_fn(fn):
+    def _normalize_option_fn(fn: Union[type, Callable]) -> Callable:
         if fn == int:
             return _xml_int
         elif fn == bool:
@@ -93,7 +87,8 @@ class Block:
         return fn
 
     @staticmethod
-    def register_option(plugin, name, fn):
+    def register_option(plugin: str, name: str,
+                        fn: Union[type, Callable]) -> None:
         fn = Block._normalize_option_fn(fn)
         Block.log.debug("Registering option %s for %s", name, plugin)
         if plugin not in Block._PLUGIN_OPTIONS:
@@ -103,7 +98,7 @@ class Block:
             Block.log.warn("Overwriting option %s for %s", name, plugin)
         Block._PLUGIN_OPTIONS[plugin][name] = fn
 
-    def options(self):
+    def options(self) -> dict:
         return {k: v for k, v in vars(self).items()
                 if v and k not in Block.VARS_BANNED}
 
@@ -114,20 +109,20 @@ class Config:
         self._blocks = []
 
     @property
-    def blocks(self):
+    def blocks(self) -> List[Block]:
         return self._blocks
 
     @property
-    def log(self):
+    def log(self) -> logging.Logger:
         return self._log
 
-    def _load_blocks(self, blocks):
+    def _load_blocks(self, blocks: ET.Element) -> None:
         if not blocks:
             self.log.critical("Missing blocks section in config.")
             exit(2)
         self._blocks = list([Block(xml) for xml in blocks])
 
-    def load(self, file):
+    def load(self, file: str):
         tree = ET.parse(file)
         root = tree.getroot()
         if root.tag != "pystatus":

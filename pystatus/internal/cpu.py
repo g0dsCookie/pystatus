@@ -37,12 +37,12 @@ class CPUInstance(IInstance):
         # so we simply ignore this
         self._get_percent()
 
-    def _get_percent(self):
+    def _get_percent(self) -> int:
         if self._cpu >= 0:
             return cpu_percent(percpu=True)[self._cpu]
         return cpu_percent()
 
-    def _get_color(self, perc):
+    def _get_color(self, perc: int) -> str:
         if perc > self._threshold_err:
             return self._color["err"]
         elif perc > self._threshold_warn:
