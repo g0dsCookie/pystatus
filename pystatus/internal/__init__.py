@@ -1,4 +1,4 @@
-from pystatus.internal import (clock, cpu, loadavg, memory, uptime)
+from pystatus.internal import (clock, cpu, loadavg, memory, uptime, zfs)
 
 PLUGINS = [
     clock.Clock,
@@ -6,4 +6,5 @@ PLUGINS = [
     loadavg.Loadavg,
     memory.Memory,
     uptime.Uptime,
+    zfs.ZFS,
 ]
