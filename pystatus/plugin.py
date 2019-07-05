@@ -130,8 +130,9 @@ class IPlugin(abc.ABC):
     def log(self) -> logging.Logger:
         return self._log
 
-    def register_option(self, name: str, fn: Union[type, Callable]) -> None:
-        pystatus.config.Block.register_option(self.name, name, fn)
+    def register_option(self, name: str, fn: Union[type, Callable],
+                        required: bool = False) -> None:
+        pystatus.config.Block.register_option(self.name, name, fn, required)
 
     def instance(self, name: str, block: pystatus.i3bar.Block,
                  interval: int, options: dict):

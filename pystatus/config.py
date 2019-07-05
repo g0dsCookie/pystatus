@@ -43,12 +43,12 @@ class Block:
     ]
 
     _BLOCK_OPTIONS = {
-        "interval": _xml_int,
-        "color": _xml_color,
-        "background": _xml_color,
-        "border": _xml_single_color,
-        "separator": _xml_bool,
-        "separator_block_width": _xml_int,
+        "interval": (_xml_int, False),
+        "color": (_xml_color, False),
+        "background": (_xml_color, False),
+        "border": (_xml_single_color, False),
+        "separator": (_xml_bool, False),
+        "separator_block_width": (_xml_int, False),
     }
 
     _PLUGIN_OPTIONS = {
@@ -71,12 +71,24 @@ class Block:
         for child in xml:
             p = self._get_option_fn(child.tag)
             setattr(self, child.tag, p(child))
+        self._check_required(self._BLOCK_OPTIONS)
+        if self.plugin in self._PLUGIN_OPTIONS:
+            self._check_required(self._PLUGIN_OPTIONS[self.plugin])
+
+    def _check_required(self, d: dict):
+        for k, v in d.items():
+            if v[1] and not hasattr(self, k):
+                self.log.critical("Missing required config %s for %s:%s",
+                                  k, self.plugin, self.name)
+                exit(5)
 
     def _get_option_fn(self, name: str) -> Callable:
         if (self.plugin in self._PLUGIN_OPTIONS
                 and name in self._PLUGIN_OPTIONS[self.plugin]):
-            return self._PLUGIN_OPTIONS[self.plugin][name]
-        return self._BLOCK_OPTIONS.get(name, _xml_text)
+            return self._PLUGIN_OPTIONS[self.plugin][name][0]
+        if name in self._BLOCK_OPTIONS:
+            return self._BLOCK_OPTIONS[name][0]
+        return _xml_text
 
     @staticmethod
     def _normalize_option_fn(fn: Union[type, Callable]) -> Callable:
@@ -84,19 +96,22 @@ class Block:
             return _xml_int
         elif fn == bool:
             return _xml_bool
+        elif fn == str:
+            return _xml_text
         return fn
 
     @staticmethod
     def register_option(plugin: str, name: str,
-                        fn: Union[type, Callable]) -> None:
+                        fn: Union[type, Callable],
+                        required: bool = False) -> None:
         fn = Block._normalize_option_fn(fn)
         Block.log.debug("Registering option %s for %s", name, plugin)
         if plugin not in Block._PLUGIN_OPTIONS:
-            Block._PLUGIN_OPTIONS[plugin] = {name: fn}
+            Block._PLUGIN_OPTIONS[plugin] = {name: (fn, required)}
             return
         if name in Block._PLUGIN_OPTIONS[plugin]:
             Block.log.warn("Overwriting option %s for %s", name, plugin)
-        Block._PLUGIN_OPTIONS[plugin][name] = fn
+        Block._PLUGIN_OPTIONS[plugin][name] = (fn, required)
 
     def options(self) -> dict:
         return {k: v for k, v in vars(self).items()
