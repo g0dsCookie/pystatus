@@ -5,7 +5,7 @@ import importlib.util
 import logging
 import re
 import os
-from typing import Union, Type, Any, Callable
+from typing import Union, Type, Callable
 import pystatus.config
 import pystatus.i3bar
 
