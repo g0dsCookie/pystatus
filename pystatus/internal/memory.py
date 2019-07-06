@@ -1,8 +1,6 @@
 from enum import Enum
 import xml.etree.ElementTree as ET
-from typing import List, Tuple
 from psutil import virtual_memory, swap_memory
-from humanfriendly import parse_size, format_size
 from .bases import StorAvailPlugin, StorAvailInstance
 
 
