@@ -121,11 +121,16 @@ class Block:
 class Config:
     def __init__(self):
         self._log = logging.getLogger("Config")
+        self._interval = 1
         self._blocks = []
 
     @property
     def blocks(self) -> List[Block]:
         return self._blocks
+
+    @property
+    def interval(self) -> int:
+        return self._interval
 
     @property
     def log(self) -> logging.Logger:
@@ -146,3 +151,5 @@ class Config:
         for child in root:
             if child.tag == "blocks":
                 self._load_blocks(child)
+            elif child.tag == "interval":
+                self._interval = int(child.text)
