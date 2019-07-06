@@ -1,4 +1,5 @@
 from pystatus.internal import (
+    battery,
     clock, cpu,
     disk,
     loadavg,
@@ -9,6 +10,7 @@ from pystatus.internal import (
 )
 
 PLUGINS = [
+    battery.Battery,
     clock.Clock, cpu.CPU,
     disk.Disk,
     loadavg.Loadavg,
