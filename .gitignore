@@ -9,3 +9,6 @@ __pycache__/
 
 # Virtuel env
 .venv
+
+# distutils
+build/
