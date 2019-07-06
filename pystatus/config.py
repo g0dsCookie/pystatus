@@ -7,6 +7,10 @@ def _xml_int(xml: ET.Element) -> int:
     return int(xml.text)
 
 
+def _xml_float(xml: ET.Element) -> float:
+    return float(xml.text)
+
+
 def _xml_text(xml: ET.Element) -> str:
     return xml.text
 
@@ -94,6 +98,8 @@ class Block:
     def _normalize_option_fn(fn: Union[type, Callable]) -> Callable:
         if fn == int:
             return _xml_int
+        elif fn == float:
+            return _xml_float
         elif fn == bool:
             return _xml_bool
         elif fn == str:

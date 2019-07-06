@@ -3,6 +3,7 @@ from pystatus.internal import (
     disk,
     loadavg,
     memory,
+    temperature,
     uptime,
     zfs
 )
@@ -12,6 +13,7 @@ PLUGINS = [
     disk.Disk,
     loadavg.Loadavg,
     memory.Memory,
+    temperature.Temperature,
     uptime.Uptime,
     zfs.ZFS,
 ]
