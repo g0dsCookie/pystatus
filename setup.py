@@ -8,5 +8,5 @@ setup(name="pystatus",
       author="g0dsCookie",
       author_email="g0dscookie@cookieprojects.de",
       url="https://github.com/g0dsCookie/pystatus",
-      packages=["pystatus", "pystatus/internal"],
+      packages=["pystatus", "pystatus.internal"],
       scripts=["pystatus.py"])
