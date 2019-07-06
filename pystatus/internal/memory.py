@@ -32,7 +32,10 @@ class Memory(StorAvailPlugin):
 
 class MemoryInstance(StorAvailInstance):
     def __init__(self, *args, **kwargs):
-        options = {"source": MemorySource.RAM}
+        options = {
+            "text": "M: {}",
+            "source": MemorySource.RAM
+        }
         super().__init__(*args, options=options, **kwargs)
 
         mem = self._get_total()

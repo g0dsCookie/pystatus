@@ -28,28 +28,21 @@ class StorAvailInstance(IInstance):
                 "err": "#ff0000",
             },
         }
-        if "text" in kwargs:
-            options["text"] = kwargs["text"]
-            del kwargs["text"]
-        if "threshold_err" in kwargs:
-            try:
-                options["threshold_err"] = int(kwargs["threshold_err"])
-            except ValueError:
-                options["threshold_err"] = parse_size(kwargs["threshold_err"])
-            del kwargs["threshold_err"]
-        if "threshold_warn" in kwargs:
-            try:
-                options["threshold_warn"] = int(kwargs["threshold_warn"])
-            except ValueError:
-                options["threshold_warn"] = parse_size(kwargs["threshold_warn"])
-            del kwargs["threshold_warn"]
-        if "color" in kwargs:
-            options["color"] = kwargs["threshold_warn"]
-            del kwargs["threshold_warn"]
         if "options" in kwargs:
-            for k, v in kwargs["options"].items():
-                options[k] = v
+            kopts = kwargs["options"]
             del kwargs["options"]
+        else:
+            kopts = {}
+
+        for k, v in kopts.items():
+            if k == "threshold_err" or k == "threshold_warn":
+                try:
+                    options[k] = int(v)
+                except ValueError:
+                    options[k] = parse_size(v)
+                continue
+            options[k] = v
+
         super().__init__(*args, options=options, **kwargs)
 
     @abc.abstractmethod

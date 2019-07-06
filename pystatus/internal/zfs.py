@@ -34,16 +34,16 @@ class ZFSInstance(StorAvailInstance):
 
     def __init__(self, *args, **kwargs):
         options = {
+            "text": None,
+            "threshold_warn": "20g",
+            "threshold_err": "10g",
             "zfs": None,
             "dataset": None,
         }
-        super().__init__(*args,
-                         text="Z: {}",
-                         threshold_warn="20g",
-                         threshold_err="10g",
-                         options=options,
-                         **kwargs)
+        super().__init__(*args, options=options, **kwargs)
 
+        if not self._text:
+            self._text = self._dataset + ": {}"
         if not self._zfs:
             self._zfs = self._peek_path()
             if not self._zfs:
