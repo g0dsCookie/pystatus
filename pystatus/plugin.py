@@ -175,7 +175,7 @@ class PluginParent:
 
     def load_plugins(self, dirpath: str) -> None:
         self._load_internals()
-        if dirpath:
+        if dirpath and os.path.isdir(dirpath):
             self._log.info("Loading plugins from %s", dirpath)
             self._load_externals(dirpath)
 
