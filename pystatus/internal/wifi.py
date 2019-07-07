@@ -9,7 +9,7 @@ class WifiPlugin(IPlugin):
     def __init__(self):
         super().__init__("wifi", "0.1", "g0dscookie", WifiInstance)
         self.register_option("text", self._text)
-        self.register_option("iface", str, required=True)
+        self.register_option("iface", str)
         self.register_option("wpa_cli", str)
 
     def _text(self, xml: ET.Element) -> dict:
@@ -23,7 +23,7 @@ class WifiInstance(IInstance):
         options = {
             "text": None,
             "wpa_cli": None,
-            "iface": "wlan0",
+            "iface": None,
             "color": {
                 "default": "#ffffff",
                 "completed": "#00ff00",
@@ -33,6 +33,8 @@ class WifiInstance(IInstance):
         }
         super().__init__(*args, options=options, **kwargs)
 
+        if not self._iface:
+            self._iface = self.name if self.name != "wifi" else "wlan0"
         if not self._text:
             self._text = {
                 "default": self._iface + ": {wpa_state}",
