@@ -1,6 +1,7 @@
 import logging
 import xml.etree.ElementTree as ET
-from typing import Union, Callable, List
+from typing import Union, Callable, List, Any
+from pystatus import lib_path
 
 
 def _xml_int(xml: ET.Element) -> int:
@@ -128,7 +129,9 @@ class Config:
     def __init__(self):
         self._log = logging.getLogger("Config")
         self._interval = 1
+        self._plugindir = lib_path("pystatus")
         self._blocks = []
+        self._blocks_cfg = None
 
     @property
     def blocks(self) -> List[Block]:
@@ -138,15 +141,21 @@ class Config:
     def interval(self) -> int:
         return self._interval
 
+    @interval.setter
+    def interval(self, value: Any):
+        self._interval = value if isinstance(value, int) else int(value)
+
+    @property
+    def plugindir(self) -> str:
+        return self._plugindir
+
+    @plugindir.setter
+    def plugindir(self, value: str):
+        self._plugindir = value
+
     @property
     def log(self) -> logging.Logger:
         return self._log
-
-    def _load_blocks(self, blocks: ET.Element) -> None:
-        if not blocks:
-            self.log.critical("Missing blocks section in config.")
-            exit(2)
-        self._blocks = list([Block(xml) for xml in blocks])
 
     def load(self, file: str):
         tree = ET.parse(file)
@@ -156,6 +165,15 @@ class Config:
             exit(2)
         for child in root:
             if child.tag == "blocks":
-                self._load_blocks(child)
-            elif child.tag == "interval":
-                self._interval = int(child.text)
+                # defer block parsing
+                self._blocks_cfg = child
+                continue
+            if hasattr(self, child.tag):
+                setattr(self, child.tag, child.text)
+
+    def load_blocks(self) -> None:
+        if not self._blocks_cfg:
+            self.log.critical("Missing blocks section in config.")
+            exit(2)
+        self._blocks = list([Block(xml) for xml in self._blocks_cfg])
+        del self._blocks_cfg
