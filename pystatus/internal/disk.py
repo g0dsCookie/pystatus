@@ -6,7 +6,7 @@ from .bases import StorAvailPlugin, StorAvailInstance
 class Disk(StorAvailPlugin):
     def __init__(self):
         super().__init__("disk", "0.1", "g0dscookie", DiskInterface)
-        self.register_option("dir", self._check_path, required=True)
+        self.register_option("dir", self._check_path)
 
     def _check_path(self, xml: ET.Element) -> str:
         path = xml.text
@@ -29,6 +29,11 @@ class DiskInterface(StorAvailInstance):
             "dir": None
         }
         super().__init__(*args, options=options, **kwargs)
+        if not self._dir:
+            if not self.name.startswith("disk_/"):
+                self.log.critical("No directory specified")
+                exit(2)
+            self._dir = self.name.split("_", 1)[1]
         if not self._text:
             self._text = self._dir + ": {}"
 
