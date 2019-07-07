@@ -1,7 +1,7 @@
 import logging
 import xml.etree.ElementTree as ET
 from typing import Union, Callable, List, Any
-from pystatus import lib_path
+from pystatus.helpers import lib_path
 
 
 def _xml_int(xml: ET.Element) -> int:

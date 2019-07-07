@@ -5,7 +5,7 @@ import os
 import signal
 import sys
 import time
-from pystatus import config_path
+from pystatus.helpers import config_path
 from pystatus.config import Config
 from pystatus.i3bar import Statusline
 from pystatus.plugin import PluginParent
