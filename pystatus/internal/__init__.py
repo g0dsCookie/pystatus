@@ -6,7 +6,8 @@ from pystatus.internal import (
     memory,
     temperature,
     uptime,
-    zfs
+    wifi,
+    zfs,
 )
 
 PLUGINS = [
@@ -17,5 +18,6 @@ PLUGINS = [
     memory.Memory,
     temperature.Temperature,
     uptime.Uptime,
+    wifi.WifiPlugin,
     zfs.ZFS,
 ]
