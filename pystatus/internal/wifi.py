@@ -34,7 +34,8 @@ class WifiInstance(IInstance):
         super().__init__(*args, options=options, **kwargs)
 
         if not self._iface:
-            self._iface = self.name if self.name != "wifi" else "wlan0"
+            self._iface = (self.name.split("_", 1)[1] if self.name != "wifi"
+                           else "wlan0")
         if not self._text:
             self._text = {
                 "default": self._iface + ": {wpa_state}",
