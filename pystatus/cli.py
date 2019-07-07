@@ -36,12 +36,14 @@ class PystatusCli:
                                 format=logfmt,
                                 stream=sys.stderr)
 
+        self._stop = False
         self._cfg = Config()
         self._parent = PluginParent()
         self._statusline = Statusline(sys.stdout,
                                       4 if self._args.debug else None)
 
         signal.signal(signal.SIGINT, self.sighandler)
+        signal.signal(signal.SIGHUP, self.sighandler)
 
     @property
     def cfg(self) -> Config:
@@ -54,6 +56,10 @@ class PystatusCli:
     @property
     def statusline(self) -> Statusline:
         return self._statusline
+
+    @property
+    def should_stop(self) -> bool:
+        return self._stop
 
     @property
     def log(self) -> logging.Logger:
@@ -70,17 +76,25 @@ class PystatusCli:
                                  self.statusline.new_block(block.plugin,
                                                            block.name),
                                  block.interval, block.options())
-        self.statusline.start()
 
     def sighandler(self, signum, frame):
         if signum == signal.SIGINT:
-            self.log.info("Received SIGINT")
+            self.log.info("Received SIGINT, closing...")
+            self._stop = True
             self.statusline.stop()
             self.parent.stop()
+        elif signum == signal.SIGHUP:
+            self.log.info("Received SIGHUP, reloading...")
+            self.statusline.empty()
+            self.parent.stop()
+            self.load()
+            self.setup()
+            time.sleep(0.1)
 
     def run(self):
+        self.statusline.start()
         time.sleep(0.1)
-        while self.statusline.is_open:
+        while not self.should_stop and self.statusline.is_open:
             self.statusline.sendline()
             time.sleep(self.cfg.interval)
 

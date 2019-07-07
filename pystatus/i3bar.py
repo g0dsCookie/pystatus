@@ -211,6 +211,12 @@ class Statusline:
         self.writer.flush()
         self._is_open = True
 
+    def empty(self) -> None:
+        if not self._is_open:
+            return
+        with self._lock:
+            self._blocks = []
+
     def stop(self) -> None:
         if not self.is_open:
             self._log.warn("i3bar stream already stopped!")
