@@ -3,6 +3,7 @@ import logging
 from subprocess import Popen, PIPE
 import xml.etree.ElementTree as ET
 from .bases import StorAvailPlugin, StorAvailInstance
+from pystatus.helpers import peek_binary
 
 
 def _check_path(path: str, log: logging.Logger):
@@ -27,11 +28,6 @@ class ZFS(StorAvailPlugin):
 
 
 class ZFSInstance(StorAvailInstance):
-    PATHS = [
-        "/sbin", "/usr/sbin", "/usr/local/sbin",
-        "/bin", "/usr/bin", "/usr/local/bin",
-    ]
-
     def __init__(self, *args, **kwargs):
         options = {
             "text": None,
@@ -51,13 +47,12 @@ class ZFSInstance(StorAvailInstance):
                 exit(6)
 
     def _peek_path(self) -> str:
-        for p in self.PATHS:
-            path = os.path.join(p, "zfs")
-            if not os.path.exists(path):
-                continue
-            _check_path(path, self.log)
-            return path
-        return None
+        p = peek_binary("zfs")
+        if not p:
+            self.log.critical("Could not find 'zfs' in PATH")
+            exit(2)
+        _check_path(p, self.log)
+        return p
 
     def get_available(self):
         p = Popen([self._zfs,
