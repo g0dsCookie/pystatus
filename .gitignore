@@ -10,5 +10,7 @@ __pycache__/
 # Virtuel env
 .venv
 
-# distutils
+# setuptools
 build/
+dist/
+pystatus.egg-info
