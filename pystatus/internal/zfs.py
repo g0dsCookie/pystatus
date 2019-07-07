@@ -19,7 +19,7 @@ class ZFS(StorAvailPlugin):
     def __init__(self):
         super().__init__("zfs", "0.1", "g0dscookie", ZFSInstance)
         self.register_option("zfs", self._check_path)
-        self.register_option("dataset", str, required=True)
+        self.register_option("dataset", str)
 
     def _check_path(self, xml: ET.Element) -> str:
         path = xml.text
@@ -38,6 +38,11 @@ class ZFSInstance(StorAvailInstance):
         }
         super().__init__(*args, options=options, **kwargs)
 
+        if not self._dataset:
+            if self.name == "zfs":
+                self.log.critical("No dataset specified")
+                exit(2)
+            self._dataset = self.name.split("_", 1)[1]
         if not self._text:
             self._text = self._dataset + ": {}"
         if not self._zfs:
