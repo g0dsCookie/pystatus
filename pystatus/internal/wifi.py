@@ -52,9 +52,9 @@ class WifiInstance(IInstance):
                   stdin=PIPE, stdout=PIPE, stderr=PIPE)
         (stdout, stderr) = p.communicate()
         if p.returncode != 0:
-            self.log.critical("Got non-zero exit code from wpa_cli: %d",
-                              p.returncode)
-            exit(p.returncode)
+            self.log.critical("Got non-zero exit code from wpa_cli: %d | %s",
+                              p.returncode, stderr.decode("utf8"))
+            return {}
         status = {}
         for line in stdout.decode("utf8").split("\n"):
             if not line:
